@@ -13,6 +13,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/ugorji/go/codec"
 
 	"github.com/weaveworks/common/network"
 	"github.com/weaveworks/common/sanitize"
@@ -86,6 +87,14 @@ func maybeExportProfileData(flags probeFlags) {
 	}
 }
 
+type stdoutPublisher struct{}
+
+func (stdoutPublisher) Publish(rep report.Report) error {
+	handle := &codec.JsonHandle{Indent: 2}
+	handle.Canonical = true
+	return codec.NewEncoder(os.Stdout, handle).Encode(rep)
+}
+
 // Main runs the probe
 func probeMain(flags probeFlags, targets []appclient.Target) {
 	setLogLevel(flags.logLevel)
@@ -148,7 +157,14 @@ func probeMain(flags probeFlags, targets []appclient.Target) {
 	}
 	defer resolver.Stop()
 
-	p := probe.New(flags.spyInterval, flags.publishInterval, clients, flags.noControls)
+	var publisher probe.ReportPublisher
+	if flags.printOnStdout {
+		publisher = new(stdoutPublisher)
+	} else {
+		publisher = clients
+	}
+
+	p := probe.New(flags.spyInterval, flags.publishInterval, publisher, flags.noControls)
 
 	hostReporter := host.NewReporter(hostID, hostName, probeID, version, clients, handlerRegistry)
 	defer hostReporter.Stop()
