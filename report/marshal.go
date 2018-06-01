@@ -35,17 +35,18 @@ func (StdoutPublisher) Publish(rep Report) error {
 	return codec.NewEncoder(os.Stdout, handle).Encode(rep)
 }
 
-// WriteBinary writes a Report as a gzipped msgpack.
-func (rep Report) WriteBinary(w io.Writer, compressionLevel int) error {
-	gzwriter, err := gzip.NewWriterLevel(w, compressionLevel)
+// WriteBinary writes a Report as a gzipped msgpack into a bytes.Buffer
+func (rep Report) WriteBinary() (*bytes.Buffer, error) {
+	w := &bytes.Buffer{}
+	gzwriter, err := gzip.NewWriterLevel(w, gzip.DefaultCompression)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err = codec.NewEncoder(gzwriter, &codec.MsgpackHandle{}).Encode(&rep); err != nil {
-		return err
+		return nil, err
 	}
 	gzwriter.Close() // otherwise the content won't get flushed to the output stream
-	return nil
+	return w, nil
 }
 
 type byteCounter struct {
