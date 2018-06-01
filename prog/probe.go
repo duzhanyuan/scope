@@ -13,7 +13,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/ugorji/go/codec"
 
 	"github.com/weaveworks/common/network"
 	"github.com/weaveworks/common/sanitize"
@@ -87,14 +86,6 @@ func maybeExportProfileData(flags probeFlags) {
 	}
 }
 
-type stdoutPublisher struct{}
-
-func (stdoutPublisher) Publish(rep report.Report) error {
-	handle := &codec.JsonHandle{Indent: 2}
-	handle.Canonical = true
-	return codec.NewEncoder(os.Stdout, handle).Encode(rep)
-}
-
 // Main runs the probe
 func probeMain(flags probeFlags, targets []appclient.Target) {
 	setLogLevel(flags.logLevel)
@@ -146,7 +137,7 @@ func probeMain(flags probeFlags, targets []appclient.Target) {
 	}
 	if flags.printOnStdout {
 		clients = new(struct {
-			stdoutPublisher
+			report.StdoutPublisher
 			controls.DummyPipeClient
 		})
 	} else {
