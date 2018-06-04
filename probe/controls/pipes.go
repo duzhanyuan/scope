@@ -55,7 +55,7 @@ func (p *pipe) Close() error {
 	return err2
 }
 
-// Dummy implementation of PipeClient when running the probe in debugging mode
+// DummyPipeClient implements PipeClient when running the probe in debugging mode
 type DummyPipeClient struct{}
 
 // PipeConnection implements controls.PipeClient

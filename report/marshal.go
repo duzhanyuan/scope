@@ -29,6 +29,7 @@ func (s *dummySelfer) CodecEncodeSelf(encoder *codec.Encoder) {
 // StdoutPublisher is useful when debugging
 type StdoutPublisher struct{}
 
+// Publish implements probe.ReportPublisher
 func (StdoutPublisher) Publish(rep Report) error {
 	handle := &codec.JsonHandle{Indent: 2}
 	handle.Canonical = true
